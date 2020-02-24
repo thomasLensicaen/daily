@@ -6,7 +6,7 @@ import os
 import stat
 
 
-def create_default_config():
+def create_default_config() -> Config:
     default_conf = Config.get_default()
     return default_conf
 
@@ -14,6 +14,7 @@ def create_default_config():
 def initialize(config: Config, config_path: pathlib.Path):
     config.get_work_dir().mkdir(exist_ok=True)
     config.get_storage_dir().mkdir(exist_ok=True)
+    config.get_backup().mkdir(exist_ok=True)
     config.save(config_path)
 
 

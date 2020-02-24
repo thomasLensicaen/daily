@@ -6,6 +6,7 @@ DEFAULT_WD_PATH = pathlib.Path.home() / '.daily'
 DEFAULT_STORAGE_PATH = DEFAULT_WD_PATH / 'dailies'
 DEFAULT_CONFIG_NAME = 'config.json'
 DEFAULT_CONFIG_PATH = DEFAULT_WD_PATH / DEFAULT_CONFIG_NAME
+DEFAULT_BACKUP = DEFAULT_WD_PATH / 'backup'
 ROOT_DIR = pathlib.Path(__file__).parent.parent.resolve()
 
 NEW_LINE: str = '\n'
