@@ -19,7 +19,8 @@ class Config:
     def save(self, config_path: pathlib.Path):
         with open(config_path, 'w') as fd:
             json.dump({'work_dir': self.work_dir,
-                       'storage_dir': self.storage_dir}, fd)
+                       'storage_dir': self.storage_dir,
+                       'backup_dir': self.backup_dir}, fd)
 
     def get_work_dir(self) -> pathlib.Path:
         return pathlib.Path(self.work_dir)
@@ -32,5 +33,5 @@ class Config:
 
     @classmethod
     def get_default(cls) -> 'Config':
-        return Config(DEFAULT_WD_PATH.as_posix(), DEFAULT_STORAGE_PATH.as_posix(), DEFAULT_BACKUP)
+        return Config(DEFAULT_WD_PATH.as_posix(), DEFAULT_STORAGE_PATH.as_posix(), DEFAULT_BACKUP.as_posix())
 

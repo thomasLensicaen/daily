@@ -1,12 +1,7 @@
-from dataclasses import dataclass
-import pathlib
-from datetime import date, timedelta
-import argparse
-from common import parse_date
-from config import Config
-from daily_types import DatedDaily, Daily
+from datetime import date
+from daily_types import DatedDaily
 
 
-def create_new_daily( config: Config, daily_date: date):
-    return DatedDaily(daily_date).save(config.get_storage_dir())
+def create_new_daily(daily_date: date) -> DatedDaily:
+    return DatedDaily(daily_date)
 

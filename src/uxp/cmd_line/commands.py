@@ -1,12 +1,13 @@
 from dataclasses import dataclass
-import pathlib
+from common import NEW_LINE
 from datetime import date, timedelta
 import argparse
 from common import parse_date
 from config import Config
 import subprocess
-from functionalities import create_new_daily, delete_daily
-from daily_types import DatedDaily, Daily
+from functionalities import create_new_daily, delete_daily, get_all_dailies, filter_daily
+from daily_types import DatedDaily
+from typing import Callable
 
 
 @dataclass
@@ -23,7 +24,7 @@ class CliNewArgs:
             return CliNewArgs(date.today())
 
     def apply(self, config: Config):
-        new_dated_daily = create_new_daily(config, self.daily_date)
+        new_dated_daily: DatedDaily = create_new_daily(self.daily_date)
         new_dated_daily.save(config.get_storage_dir())
 
 
@@ -61,10 +62,10 @@ class CliEditArgs:
         try:
             DatedDaily.load(config.get_storage_dir(), self.daily_date)
         except FileNotFoundError as fe:
-            print(f"Daily doesn't exist.")
+            print(f"Daily {self.daily_date.strftime('%Y-%m-%d')} doesn't exist.")
             exit(1)
         except Exception as e:
-            print(f'Malformed daily {self.daily_date.strftime("%Y-%m-%d")}')
+            print(f'Malformed daily {self.daily_date.strftime("%Y-%m-%d")}.')
             print(e)
         path = DatedDaily.as_file_path(config.get_storage_dir(), self.daily_date)
         cmd = f'nvim {path.resolve().as_posix()}'
@@ -73,8 +74,10 @@ class CliEditArgs:
 
 @dataclass
 class CliListArgs:
-    daily_date: date = None
-    before: bool = True
+    daily_date: date
+    before: int = None
+    after: int = None
+    _all : bool = False
 
     @staticmethod
     def from_namespace(args: argparse.Namespace) -> 'CliListArgs':
@@ -85,9 +88,19 @@ class CliListArgs:
         else:
             return CliListArgs(date.today())
 
+    def create_cond(self) -> Callable[[DatedDaily], bool]:
+        if self.after:
+            return lambda daily: self._all or 0 <= (self.daily_date - daily.daily_date).days < self.after
+        elif self.before:
+            return lambda daily: self._all or 0 <= - (self.daily_date - daily.daily_date).days < self.before
+
+    @staticmethod
+    def format_daily(daily: DatedDaily):
+        return daily.daily_date.strftime(DatedDaily.DISPLAY_FORMAT)
+
     def apply(self, config: Config):
-        cmd = f'nvim {DatedDaily.load(config.get_storage_dir(), self.daily_date).get_file_path(pathlib.Path(config.get_storage_dir())).resolve().as_posix()}'
-        subprocess.run(cmd, shell=True)
+        daily_gen = get_all_dailies(config.get_storage_dir())
+        print(' '.join(sorted([self.format_daily(daily) for daily in filter_daily(self.create_cond(), daily_gen)])) + NEW_LINE)
 
 
 @dataclass
@@ -108,7 +121,7 @@ class CliShowArgs:
         try:
             DatedDaily.load(config.get_storage_dir(), self.daily_date)
         except FileNotFoundError as fe:
-            print(f"Daily doesn't exist.")
+            print(f'Daily {self.daily_date.strftime("%Y-%m-%d")} doesn\'t exist.')
             exit(1)
         except Exception as e:
             print(f'Malformed daily {self.daily_date.strftime("%Y-%m-%d")}')

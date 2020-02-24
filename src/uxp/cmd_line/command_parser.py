@@ -34,7 +34,14 @@ def arg_interpreter(args) -> argparse.Namespace:
     add_common_args(show)
 
     list_parser = sub_parser.add_parser('list')
-    add_common_args(list_parser)
+    list_parser = add_common_args(list_parser)
+    list_parser.add_argument('-b', type=int, default=10, required=False,
+                             help='Number of days to list before stated date.')
+    list_parser.add_argument('-a', type=int, default=10, required=False,
+                             help='Number of days to list after stated date.')
+    list_parser.add_argument('-A', '--all', type=bool, default=False, action='store_true',
+                             help='Whether to display everything or not')
+
 
     report = sub_parser.add_parser('report')
     add_common_args(report)

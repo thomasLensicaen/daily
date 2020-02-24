@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import pathlib
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional
 from common import NEW_LINE, SECTION_SEP, ELEMENT_SPLITTER
 
@@ -178,6 +178,10 @@ class DatedDaily:
 
     def get_file_path(self, storage_dir: pathlib.Path):
         return self.as_file_path(storage_dir, self.daily_date)
+
+    @classmethod
+    def get_daily_date_from_name(cls, name: str) -> date:
+        return datetime.strptime(name.replace('daily_', ''), cls.FILE_FORMAT).date()
 
     @classmethod
     def as_file_path(cls, work_dir: pathlib.Path, daily_date: date) -> pathlib.Path:
