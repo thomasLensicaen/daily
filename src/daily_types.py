@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import pathlib
 from datetime import date
-from typing import List
+from typing import List, Optional
 from common import NEW_LINE, SECTION_SEP, ELEMENT_SPLITTER
 
 
@@ -38,21 +38,34 @@ class Achievable:
 @dataclass
 class Task(Achievable):
     name: str
-    description: str = ''
+    description: Optional[str]= None
     achieved: bool = False
 
     def to_str(self):
-        return self.get_achieved_marker() + ELEMENT_SPLITTER + self.name + ELEMENT_SPLITTER + self.description
+        return self.get_achieved_marker() + ELEMENT_SPLITTER + self.name + ((ELEMENT_SPLITTER + self.description) if self.description else '')
 
     @staticmethod
     def from_str(line: str):
-        raw_achieved_marker, name, description = line.split(ELEMENT_SPLITTER)
-        achieved = Achievable.is_achieved(raw_achieved_marker)
+        # Case Nothing or malformed one element
+        data = line.split(ELEMENT_SPLITTER)
+        if line == '' or len(data) == 1:
+            achieved = False
+            name = ''
+            description = None
+        elif len(data) >= 2:
+            raw_achieved_marker, name = data[0], data[1]
+            if len(data) == 3:
+                description = data[2]
+            else:
+                description = None
+            achieved = Achievable.is_achieved(raw_achieved_marker)
+        else:
+            raise ValueError('Not parsable {data}')
         return Task(name, description, achieved)
 
     @staticmethod
     def get_default() -> 'Task':
-        return Task('nothing', '')
+        return Task('nothing', None, False)
 
 
 @dataclass
@@ -120,7 +133,7 @@ class ObjectiveSection(Section):
 
 
 class AdditionalObjectiveSection(Section):
-    SECTION_ID = 'SECTION'
+    SECTION_ID = 'ADDITIONAL OBJECTIVES'
     ITEM_CLASS = AdditionalObjective
 
 
@@ -179,6 +192,6 @@ class DatedDaily:
     @classmethod
     def load(cls, storage_dir: pathlib.Path, daily_date: date) -> 'DatedDaily':
         if not cls.as_file_path(storage_dir, daily_date).exists():
-            raise Exception(f'Daily for date {daily_date.strftime(cls.DISPLAY_FORMAT)} already exists')
+            raise FileNotFoundError(f'Daily for date {daily_date.strftime(cls.DISPLAY_FORMAT)} doesn\'t exists')
         with open(cls.as_file_path(storage_dir, daily_date), 'r') as fd:
             return DatedDaily(daily_date, Daily.from_str(fd.read()))

@@ -22,5 +22,14 @@ class CliEditArgs:
             return CliEditArgs(date.today())
 
     def apply(self, config: Config):
-        cmd = f'nvim {DatedDaily.load(config.get_storage_dir(), self.daily_date).get_file_path(pathlib.Path(config.get_storage_dir())).resolve().as_posix()}'
+        try:
+            DatedDaily.load(config.get_storage_dir(), self.daily_date)
+        except FileNotFoundError as fe:
+            print(f"Daily doesn't exist.")
+            exit(1)
+        except Exception as e:
+            print(f'Malformed daily {self.daily_date.strftime("%Y-%m-%d")}')
+            print(e)
+        path = DatedDaily.as_file_path(config.get_storage_dir(), self.daily_date)
+        cmd = f'nvim {path.resolve().as_posix()}'
         subprocess.run(cmd, shell=True)

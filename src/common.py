@@ -9,8 +9,8 @@ DEFAULT_CONFIG_PATH = DEFAULT_WD_PATH / DEFAULT_CONFIG_NAME
 ROOT_DIR = pathlib.Path(__file__).parent.parent.resolve()
 
 NEW_LINE: str = '\n'
-SECTION_SEP = '-' * 10 + '\n'
-ELEMENT_SPLITTER = '\t'
+SECTION_SEP: str = NEW_LINE + '-' * 10 + NEW_LINE
+ELEMENT_SPLITTER: str = '\t'
 
 
 def parse_date(str_date) -> Optional[date]:
