@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import pathlib
 from datetime import date, datetime
-from typing import List, Optional
+from typing import List, Optional, Callable, Any
 from common import NEW_LINE, SECTION_SEP, ELEMENT_SPLITTER
 
 
@@ -121,6 +121,16 @@ class Section:
         else:
             return cls(items=[])
 
+    def filter(self, cond: Callable[[Achievable], bool]) -> 'Section':
+        return self.__class__([item for item in self.items if cond(item)])
+
+    def to_unachieved(self) -> 'Section':
+        return self.filter(lambda a: not a.achieved)
+
+    def copy(self, only_not_accomplished: bool = True) -> 'Section':
+        items = self.filter()
+        self.__class__
+
 
 class TasksSection(Section):
     SECTION_ID = 'TASKS'
@@ -147,20 +157,24 @@ class Daily:
         tasks_str = self.task_section.to_str()
         objs_str = self.objective_section.to_str()
         add_objs_str = self.additional_objective_section.to_str()
-        return SECTION_SEP.join([tasks_str, objs_str, add_objs_str])
+        return SECTION_SEP.join([tasks_str, objs_str, add_objs_str]) + NEW_LINE
 
     @classmethod
     def from_str(cls, raw: str) -> 'Daily':
         tasks_str, objs_str, add_objs_str = raw.split(SECTION_SEP)
         return Daily(TasksSection.from_str(tasks_str),
                      ObjectiveSection.from_str(objs_str),
-                     AdditionalObjectiveSection.from_str(add_objs_str))
+                     AdditionalObjectiveSection.from_str(add_objs_str[:-1]))
 
     @staticmethod
     def get_default():
         return Daily(TasksSection([Task.get_default()]),
                      ObjectiveSection([Objective.get_default()]),
                      AdditionalObjectiveSection([AdditionalObjective.get_default()]))
+
+    def copy(self, only_not_accomplished: bool):
+        self.task_section.
+        self.task_section
 
 
 class DatedDaily:
@@ -199,3 +213,17 @@ class DatedDaily:
             raise FileNotFoundError(f'Daily for date {daily_date.strftime(cls.DISPLAY_FORMAT)} doesn\'t exists')
         with open(cls.as_file_path(storage_dir, daily_date), 'r') as fd:
             return DatedDaily(daily_date, Daily.from_str(fd.read()))
+
+    def set_date(self, daily_date: date):
+        self.daily_date = daily_date
+
+    def copy(self, only_no_accomplished: bool) -> 'DatedDaily':
+        new_daily: Daily = self.daily.copy(only_no_accomplished)
+        return new_daily
+
+    @classmethod
+    def load_from_file(cls, path: pathlib.Path) -> 'DatedDaily':
+        daily_date = cls.get_daily_date_from_name(path.name)
+        with open(path, 'r') as f:
+            daily = Daily.from_str(f.read())
+        return DatedDaily(daily_date, daily)

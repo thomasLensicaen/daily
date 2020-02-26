@@ -75,9 +75,9 @@ class CliEditArgs:
 @dataclass
 class CliListArgs:
     daily_date: date
-    before: int = None
-    after: int = None
-    _all : bool = False
+    before: int = 10
+    after: int = 10
+    _all: bool = False
 
     @staticmethod
     def from_namespace(args: argparse.Namespace) -> 'CliListArgs':
@@ -93,6 +93,10 @@ class CliListArgs:
             return lambda daily: self._all or 0 <= (self.daily_date - daily.daily_date).days < self.after
         elif self.before:
             return lambda daily: self._all or 0 <= - (self.daily_date - daily.daily_date).days < self.before
+        elif self._all:
+            return lambda daily: True
+        else:
+            raise ValueError(f'{self.__dict__} is not viable arguments')
 
     @staticmethod
     def format_daily(daily: DatedDaily):
@@ -100,6 +104,7 @@ class CliListArgs:
 
     def apply(self, config: Config):
         daily_gen = get_all_dailies(config.get_storage_dir())
+        print(daily_gen)
         print(' '.join(sorted([self.format_daily(daily) for daily in filter_daily(self.create_cond(), daily_gen)])) + NEW_LINE)
 
 
@@ -116,6 +121,37 @@ class CliShowArgs:
             return CliShowArgs(date.today() + timedelta(days=args.now))
         else:
             return CliShowArgs(date.today())
+
+    def apply(self, config: Config):
+        try:
+            DatedDaily.load(config.get_storage_dir(), self.daily_date)
+        except FileNotFoundError as fe:
+            print(f'Daily {self.daily_date.strftime("%Y-%m-%d")} doesn\'t exist.')
+            exit(1)
+        except Exception as e:
+            print(f'Malformed daily {self.daily_date.strftime("%Y-%m-%d")}')
+            print(e)
+        cmd = f'cat {DatedDaily.as_file_path(config.get_storage_dir(), self.daily_date)}'
+        subprocess.run(cmd, shell=True)
+
+    @classmethod
+    def command(cls) -> str:
+        return 'show'
+
+
+@dataclass
+class CliCopyArgs:
+    daily_date_1: date
+    daily_date_2: date
+
+    @staticmethod
+    def from_namespace(args: argparse.Namespace) -> 'CliCopyArgs':
+        if args.date:
+            return CliCopyArgs(parse_date(args.date))
+        elif args.now:
+            return CliCopyArgs(date.today() + timedelta(days=args.now))
+        else:
+            return CliCopyArgs(date.today())
 
     def apply(self, config: Config):
         try:

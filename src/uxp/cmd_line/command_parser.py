@@ -1,5 +1,5 @@
 import argparse
-from uxp.cmd_line.commands import CliNewArgs, CliListArgs, CliDeleteArgs, CliEditArgs, CliShowArgs
+from uxp.cmd_line.commands import CliNewArgs, CliListArgs, CliDeleteArgs, CliEditArgs, CliShowArgs, CliCopyArgs
 
 
 def add_common_args(sub_parser: argparse.ArgumentParser):
@@ -39,12 +39,15 @@ def arg_interpreter(args) -> argparse.Namespace:
                              help='Number of days to list before stated date.')
     list_parser.add_argument('-a', type=int, default=10, required=False,
                              help='Number of days to list after stated date.')
-    list_parser.add_argument('-A', '--all', type=bool, default=False, action='store_true',
+    list_parser.add_argument('-A', '--all', default=False, action='store_true',
                              help='Whether to display everything or not')
-
 
     report = sub_parser.add_parser('report')
     add_common_args(report)
+
+    copy_parser = sub_parser.add_parser('copy')
+    copy_parser.add_argument('-d1', '--date_1', type=str, default=None, required=False, help='Date of the daily plan, with format="YYYY-MM-DD"')
+    copy_parser.add_argument('-d2', '--date_2', type=str, default=None, required=False, help='Date of the daily plan, with format="YYYY-MM-DD"')
 
     parsed = parser.parse_args(args[1:])
     return parsed
@@ -62,6 +65,8 @@ def parse_args(args):
         return CliListArgs.from_namespace(ns)
     elif ns.command == 'show':
         return CliShowArgs.from_namespace(ns)
+    elif ns.command == 'copy':
+        return CliCopyArgs.from_namespace(ns)
     elif ns.command == 'report':
         raise NotImplementedError('report is not implemented yet')
     else:
