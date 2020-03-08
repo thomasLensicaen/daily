@@ -5,15 +5,6 @@ from typing import List, Optional, Callable, Any
 from common import NEW_LINE, SECTION_SEP, ELEMENT_SPLITTER
 
 
-class PrintableElement:
-
-    first_default_marker: str = None
-
-    @classmethod
-    def generate_default(cls):
-        return cls.first_default_marker
-
-
 class Achievable:
 
     achieved_marker = 'X'

@@ -5,7 +5,7 @@ import argparse
 from common import parse_date
 from config import Config
 import subprocess
-from functionalities import create_new_daily, delete_daily, get_all_dailies, filter_daily
+from functionalities.daily import create_new_daily, delete_daily, get_all_dailies, filter_daily
 from daily_types import DatedDaily
 from typing import Callable
 
